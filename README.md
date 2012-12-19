@@ -1,0 +1,1 @@
+This is a simple pac-man game that I'm trying to create with FlashDevelop with Actionscript 3. I'm using the "blitting" technique (although no bitmaps are being used). Any help would be apreciated.
