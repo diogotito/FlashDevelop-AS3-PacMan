@@ -5,17 +5,22 @@ package com.tito97.pacman.entities.characters
 	import com.tito97.pacman.maps.MapHandler;
 	import com.tito97.pacman.utilities.Directions;
 	import com.tito97.pacman.utilities.FPSCounter;
+	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	/**
-	 * ...
+	 * Represents the Pac-Man object, which should be controllable by the player.
 	 * @author Diogo
 	 */
 	public class PacMan extends MovingCharacter 
 	{
-		
+		/**
+		 * The normal speed predefined for the Pac-Man
+		 * ATENTION: This constant's value should be a divisor of Game.GRID_SIZE so that the Pac-Man can be
+		 * perfectly aligned on every cell in the maps's grid.
+		 */
 		public static const SPEED:Number = 2;
 		
 		private const MOUTH_SPEED:Number = 4.5;
@@ -25,32 +30,48 @@ package com.tito97.pacman.entities.characters
 		
 		private var _nextDirection:uint;
 		
+		/**
+		 * Constructs an instance for the Pac-Man object.
+		 * After constructing it, the application should pass the direction that the player presses into the
+		 * turnIntent() function so the Pac-Man can decide the best moment to turn on it.
+		 * @param	startX The Pac-Man's starring column
+		 * @param	startY The Pac-Man's starting row
+		 * @param	map The map that will inidcate where the Pac-Man can be.
+		 * @param	direction The Pac-Man's initial direction.
+		 */
 		public function PacMan(startX:Number, startY:Number, map:MapHandler, direction:uint) 
 		{
-			super(startX, startY, 20, 20, map, direction);
+			super(startX, startY, 20, 20, map, direction, SPEED);
 			_nextDirection = direction;
 			image_sprite = new Sprite();
 			draw();
 		}
 		
-		override public function Render():void 
+		override public function Update():void 
+		{
+			move();
+			animateMouth();
+			draw();
+			
+			updateDebugInfo();
+		}
+		
+		override public function Render(renderer:BitmapData):void 
 		{
 			var matrix:Matrix = new Matrix();
 			matrix.rotate(Directions.getAngleFromDirection(direction));
 			matrix.translate(x+width/2, y+height/2);
-			Game.Renderer.draw(image_sprite, matrix);
+			renderer.draw(image_sprite, matrix);
 		}
 		
 		/**
-		 * Expressa a vontade do jogador de alterar a direção do Pac-Man.
-		 * A mesma será alterada quando o Pac-Man estiver alinhado com a grelha
-		 * especificada pela constante Game.GRID_SIZE.
-		 * @param	direction
-		 * A direção para qual o jogador quererá virar o Pac-Man.
-		 * Um erro será disparado se o valor da direção estiver fora do intervalo válido
-		 * (0-4).
-		 * Nada acontecerá se o jogador tentar virar o Pac-Man para trás (180º), pois isso
-		 * tiraria parte da piada deste jogo.
+		 * Expresses the player's will to change the Pac-Man's direciton.
+		 * This will be altered when the character is aligned with the grid by
+		 * the Game.GRID_SIZE constant.
+		 * NOTE: Nothing will happen if the player tries to turn the Pac-Man backwards!
+		 * @param	direction The direction in which the player wants to turn the Pac-Man
+		 * @throws Error This is thrown if the direction integer specified is out of the
+		 * valid range [0;4]
 		 */
 		public function turnIntent(direction:uint):void 
 		{
@@ -63,34 +84,30 @@ package com.tito97.pacman.entities.characters
 			}
 			else 
 			{
-				throw new Error("O valor de \"direction\" está fora do intervalo válido.");
+				throw new Error("The value of \"direction\" is out of the valid range.");
 			}
 		}
 		
-		override public function Update():void 
-		{
-			move();
-			animateMouth();
-			draw();
-			
-			updateDebugInfo();
-		}
-		
 		/**
-		 * Mover o Pac-Man de acordo com a sua direção atual
+		 * Moves the Pac-Man according to its direction
 		 */
 		private function move():void 
 		{
 			moveInDirection(direction, SPEED);
 			makeWarp();
-			if (this._isAligned && !this.getNextTile(_nextDirection).solid)
+			
+			if (this.m_isAligned && !this.getNextTile(_nextDirection).solid)
 				this.direction = this._nextDirection;
 			
 			
-			updateDebugInfo();}
-
+			updateDebugInfo();
+			
+			//BUG: a variável _isAligned não está a ser atualizada devidamente, o que provoca problemas no WARP (private get _isAligned()?);
+		}
+		
 		/**
-		 * Alterar a abertura da sua boca em função do dobro da velocidade do Pac-Man
+		 * Animates the Pac-Man's mouth opening in degrees, according to the MOUTH_SPEED
+		 * constant
 		 */
 		private function animateMouth():void 
 		{
@@ -108,17 +125,18 @@ package com.tito97.pacman.entities.characters
 		}
 		
 		/**
-		 * Desenha os gráficos vectoriais do Pac-Man
+		 * Draws the Pac-Man's vectorial graphics in the image_sprite's graphics.
+		 * These graphics will be affected by the _mouthOpening value.
 		 */
 		private function draw():void 
 		{
 			var dy:Number = 10 * Math.tan(_mouthOpening / 360 * Math.PI);
 			image_sprite.graphics.clear();
-			// Desenhar o corpo circular amarelo
+			// Draw the yellow circular body
 			image_sprite.graphics.beginFill(0xFFFF00);
 			image_sprite.graphics.drawCircle(0, 0, 10);
-			// Desenhar a boca triangular preta (da cor do funcdo) de acordo com
-			// um determinado ângulo, usando trigonometria.
+			// Draw the triangular black mouth (probably the game's background color)
+			// according to the _mouthOpening value (used to calculate dy).
 			image_sprite.graphics.beginFill(0);
 			image_sprite.graphics.moveTo(0, 0);
 			image_sprite.graphics.lineTo(10, dy);
@@ -128,6 +146,9 @@ package com.tito97.pacman.entities.characters
 		
 		}
 		
+		/**
+		 * Updates the debugging data to the live debugging field
+		 */
 		private function updateDebugInfo():void 
 		{
 			/*Game.textField.text =	"GAME object state:" + 
@@ -143,14 +164,14 @@ package com.tito97.pacman.entities.characters
 									"\n| Tile on next Direction:\t. " + getNextTile(_nextDirection) +
 									"\n| is aligned? " + (_isAligned ? "Yes" : "No");*/
 			Game.debugField.debugObjects["Pac-Man"] = {
-				"1.POSITION: ": new Point(x, y),
-				"2.TILE: ": ["ROW=" + row, "COLUMN=" + column],
-				"3.Current Tile: ": currentTile,
-				"4.Next Tile: ": nextTile,
-				"5.Current Direction: ": Directions.getDirectionText(direction),
-				"6.Next Direction: ": Directions.getDirectionText(_nextDirection),
-				"7.Tile on next Direction: ": getNextTile(_nextDirection),
-				"8.is aligned? ": (_isAligned ? "Yes" : "No")
+				"1.POSITION: ":					new Point(x, y),
+				"2.TILE: ": 					["ROW=" + row, " \tCOLUMN=" + column],
+				"3.Current Tile: ":				currentTile,
+				"4.Next Tile: ": 				nextTile,
+				"5.Current Direction: ":		Directions.getDirectionText(direction),
+				"6.Next Direction: ":			Directions.getDirectionText(_nextDirection),
+				"7.Tile on next Direction: ":	getNextTile(_nextDirection),
+				"8.is aligned? ":				(_isAligned ? "Yes" : "No")
 			};
 		
 		}

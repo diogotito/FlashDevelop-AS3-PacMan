@@ -3,7 +3,12 @@ package com.tito97.pacman.utilities
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
 	/**
-	 * ...
+	 * A class that offers static tools to work with the several motion directions that the MovingCharacters
+	 * can take.
+	 * @private PS:	By now, these directions are represented by unsigned integers from 0 to 4, but I'm planning
+	 * 				to recreate this class so these directions can be treated like objects (just like the"structs"
+	 * 				in C#, for example). I think I'll have to make use of the prototype valueOf() function, but I
+	 * 				don't have any idea on how to achieve this in ActionScript 3.
 	 * @author Diogo
 	 */
 	public class Directions 
@@ -13,6 +18,11 @@ package com.tito97.pacman.utilities
 		public static const LEFT:uint = 3;
 		public static const RIGHT:uint = 4;
 		
+		/**
+		 * Returns the opposite direction from the given one
+		 * @param	direction The direction in which to return its opposite one
+		 * @return The opposite direction from the given one
+		 */
 		public static function getOpositeDirection(direction:uint):uint
 		{
 			switch (direction) 
@@ -35,6 +45,11 @@ package com.tito97.pacman.utilities
 			}
 		}
 		
+		/**
+		 * Gets the text that represents the given direction (the first letter is capitalized)
+		 * @param	direction The direction number to return its text
+		 * @return The text representatation of the given direction
+		 */
 		public static function getDirectionText(direction:uint):String
 		{
 			switch (direction) 
@@ -57,6 +72,11 @@ package com.tito97.pacman.utilities
 			}
 		}
 		
+		/**
+		 * Calculates the rotation value (in radians) of the given direction.
+		 * @param	direction
+		 * @return The rotation value in radians of the given direction
+		 */
 		public static function getAngleFromDirection(direction:uint):Number
 		{
 			switch (direction) 
@@ -79,6 +99,12 @@ package com.tito97.pacman.utilities
 			}
 		}
 		
+		/**
+		 * Returns the speed coordinates of the given direction with a certain lenght
+		 * @param	direction The direction number to get the speed coordinates
+		 * @param	speed The lenght (in pixels) of the speed vector.
+		 * @return A Point object that stores the speed coordinates in the respective properties.
+		 */
 		public static function getSpeedCoords(direction:uint, speed:Number = 1):Point 
 		{
 			switch (direction) 
@@ -101,6 +127,11 @@ package com.tito97.pacman.utilities
 			}
 		}
 		
+		/**
+		 * Returns the direction associated with the keyCode of a KeyboardEvent
+		 * @param	keyCode The representation of the key pressed by the player
+		 * @return The representation of the direction associated with that key
+		 */
 		public static function getDirectionByKeyCode(keyCode:uint):uint
 		{
 			switch(keyCode)
@@ -123,9 +154,18 @@ package com.tito97.pacman.utilities
 			}
 		}
 		
-		public static function getRandomDirection():void 
+		/**
+		 * Returns a random direction
+		 * @param	includeStop A Boolean that indicates whether it should be possible to return the
+		 * 0 direction number (stopped).
+		 * be returned
+		 * @return The random direction calculated
+		 */
+		public static function getRandomDirection(includeStop:Boolean = false):uint 
 		{
-			
+			return includeStop ? 
+				Math.floor( Math.random() * 5 - 1 ) :
+				Math.floor( Math.random() * 4 );
 		}
 	}
 
